@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+crm_project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+crm_registered_root=""
+crm_registered_unit=""
+if [[ -f "$crm_project_root/.local/user-service.json" ]]; then
+  crm_registered_root="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("projectRoot", ""))' "$crm_project_root/.local/user-service.json")"
+  crm_registered_unit="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("unit", ""))' "$crm_project_root/.local/user-service.json")"
+fi
+if [[ "$crm_registered_root" == "$crm_project_root" ]] && [[ "${1:-}" == start || "${1:-}" == stop ]]; then
+  exec systemctl --user "$1" "$crm_registered_unit"
+fi
+exec python3 "$crm_project_root/ops/manage.py" "$@"

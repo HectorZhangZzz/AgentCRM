@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "agent-crm": {
+      "command": "node",
+      "args": [
+        "/ABSOLUTE/PATH/agent-crm/src/mcp.mjs"
+      ],
+      "env": {
+        "CRM_CLIENT_CONFIG": "/ABSOLUTE/PATH/agent-crm/.local/reader-client.json"
+      }
+    }
+  }
+}

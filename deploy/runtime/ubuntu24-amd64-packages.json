@@ -1,0 +1,53 @@
+{
+  "download_method": "apt-get download using existing Ubuntu official apt source metadata; no installation or service registration",
+  "observed_sources": [
+    "http://cn.archive.ubuntu.com/ubuntu noble/main",
+    "http://cn.archive.ubuntu.com/ubuntu noble/universe",
+    "http://cn.archive.ubuntu.com/ubuntu noble-updates/main",
+    "http://cn.archive.ubuntu.com/ubuntu noble-updates/universe"
+  ],
+  "packages": [
+    {
+      "file": "libjemalloc2_5.3.0-2build1_amd64.deb",
+      "package": "libjemalloc2",
+      "version": "5.3.0-2build1",
+      "sha256": "0cccf7701765b5a633b964ed551c2bd1c074cad17daea8fa20a4e9cad0adb5a8"
+    },
+    {
+      "file": "liblzf1_3.6-4_amd64.deb",
+      "package": "liblzf1",
+      "version": "3.6-4",
+      "sha256": "253182d4718271565d6c24125f27dd93da56fce34b34d8226615cb3553bbe73f"
+    },
+    {
+      "file": "libpq5_16.15-0ubuntu0.24.04.1_amd64.deb",
+      "package": "libpq5",
+      "version": "16.15-0ubuntu0.24.04.1",
+      "sha256": "3f96dd36bcd7841172c1ead4965da20a193bb9ccf9a93a3f5a3ac7f56369dbb1"
+    },
+    {
+      "file": "postgresql-16_16.15-0ubuntu0.24.04.1_amd64.deb",
+      "package": "postgresql-16",
+      "version": "16.15-0ubuntu0.24.04.1",
+      "sha256": "d60ae76fb862cd4cca7bfdcdcdcc271c5e1d75f6b7915305ce2d962735a4b666"
+    },
+    {
+      "file": "postgresql-client-16_16.15-0ubuntu0.24.04.1_amd64.deb",
+      "package": "postgresql-client-16",
+      "version": "16.15-0ubuntu0.24.04.1",
+      "sha256": "4796f72e1a7270ad8c17b1ecb025cd453f692b42c10aaf89f6b476da61761eac"
+    },
+    {
+      "file": "redis-server_5%3a7.0.15-1ubuntu0.24.04.5_amd64.deb",
+      "package": "redis-server",
+      "version": "5:7.0.15-1ubuntu0.24.04.5",
+      "sha256": "5f41607fb77674078c013b2a6196a748c3a5f6ec4bd3201cd08478dce3e26d05"
+    },
+    {
+      "file": "redis-tools_5%3a7.0.15-1ubuntu0.24.04.5_amd64.deb",
+      "package": "redis-tools",
+      "version": "5:7.0.15-1ubuntu0.24.04.5",
+      "sha256": "6e5c009ce7761d0a956dafcfcf054ddeecc7a51efcc38215f26bb5794a4e93e1"
+    }
+  ]
+}

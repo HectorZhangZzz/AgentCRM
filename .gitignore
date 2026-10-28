@@ -1,0 +1,17 @@
+node_modules/
+.local/
+backups/
+exports/
+/runtime/
+vendor/twenty/node_modules/
+vendor/twenty/**/dist/
+vendor/twenty/.yarn/cache/
+*.log
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+
+share/

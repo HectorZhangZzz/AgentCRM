@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Agent CRM · 客户工作台</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div id="login" class="login hidden">
+      <form id="login-form">
+        <div class="eyebrow">Agent CRM</div>
+        <h1>客户资料，有据可查。</h1>
+        <p>本机工作台保存材料与历史，由你使用的 Agent 协助整理。</p>
+        <label
+          >本机访问凭据<input
+            id="login-token"
+            type="password"
+            autocomplete="off"
+            required /></label
+        ><button>进入工作台</button>
+        <p class="muted">
+          也可以在项目目录执行 <code>./ops/crm open</code>，使用一次性链接进入。
+        </p>
+        <div id="login-error" role="alert"></div>
+      </form>
+    </div>
+    <div id="shell" class="hidden">
+      <aside>
+        <a class="brand" href="#"
+          ><span class="brand-mark">A</span
+          ><span>客户工作台<small>Agent CRM</small></span></a
+        >
+        <div class="workspace-label">个人销售 · 本机资料库</div>
+        <nav id="nav">
+          <button data-view="customers" class="active">客户与项目</button
+          ><button data-view="inbox">材料收件箱</button
+          ><button data-view="tasks">行动与承诺</button
+          ><button data-view="changes">变更与冲突</button
+          ><button data-view="settings">数据与交接</button>
+        </nav>
+        <div class="aside-bottom">
+          <span class="status-dot"></span>数据保存在本机
+          <p id="identity"></p>
+          <button id="logout" class="text-button">退出工作台</button>
+        </div>
+      </aside>
+      <main>
+        <header>
+          <div>
+            <div class="eyebrow">让每次沟通，都成为下一步的依据</div>
+            <h1 id="page-title">客户与项目</h1>
+          </div>
+          <button id="new-customer" class="secondary">＋ 建立客户</button>
+        </header>
+        <div id="notice" class="notice hidden" role="status"></div>
+        <div id="content" aria-live="polite"></div>
+      </main>
+    </div>
+    <dialog id="modal">
+      <div id="modal-content"></div>
+      <button id="modal-close" class="secondary">关闭</button>
+    </dialog>
+  </body>
+</html>

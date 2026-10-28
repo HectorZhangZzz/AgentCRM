@@ -1,0 +1,24 @@
+{
+  "name": "agent-crm",
+  "version": "0.1.2",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.5.0 <25"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "mcp": "node src/mcp.mjs",
+    "test": "node test/run.mjs",
+    "crm": "node src/cli.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/server": "2.4.0",
+    "pg": "8.23.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}

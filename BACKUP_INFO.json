@@ -1,0 +1,11 @@
+{
+  "format": "agent-crm-github-source-v1",
+  "project": "Agent CRM",
+  "sourceOnly": true,
+  "businessDataIncluded": false,
+  "sourceCommit": "35e91cfc7e3fbe200f60684a23703f8a7cd42c4e",
+  "version": "0.1.2",
+  "sourceManifestSha256": "9f8c5a7d712f60d0341c66ead10f6e298114ec7a9e5f20fc7ae378eecd1b1508",
+  "history": "Independent source-only history; original repository history is excluded.",
+  "restore": "This repository cannot restore customer databases, attachments or credentials."
+}
