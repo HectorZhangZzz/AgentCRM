@@ -867,6 +867,153 @@ test(
         },
       );
       await t.test(
+        "owner更名保留旧名和业务历史，支持幂等、并发保护、同名独立ID及恢复旧名",
+        async () => {
+          const text =
+            "合成名称甲；合成名称乙；确认合成全称有限公司；再次确认合成终版有限公司；明确别名";
+          const materialId = (await call("crm_ingest", { text })).materialId;
+          const proof = evidence(materialId, text);
+          const p = await propose(
+            "rename-fixture",
+            [materialId],
+            [
+              {
+                op: "create_entity",
+                ref: "a",
+                type: "customer",
+                name: "合成名称甲",
+                evidence: proof,
+              },
+              {
+                op: "create_entity",
+                ref: "b",
+                type: "customer",
+                name: "合成名称乙",
+                evidence: proof,
+              },
+            ],
+          );
+          const created = (await call("crm_commit", { proposalId: p })).result
+            .refs;
+          const args = {
+            entityId: created.a,
+            expectedVersion: 1,
+            name: "合成全称有限公司",
+            aliases: ["明确别名"],
+            reason: "用户明确确认",
+            evidence: proof,
+            idempotencyKey: "rename-owner",
+          };
+          const before = await domain.exportData();
+          for (const ctx of [reader, writer])
+            await assert.rejects(
+              call("crm_entity_rename", args, ctx),
+              (e) => e.code === "FORBIDDEN",
+            );
+          await assert.rejects(
+            call("crm_entity_rename", {
+              ...args,
+              evidence: evidence(materialId, "不存在的引文"),
+            }),
+            (e) => e.code === "QUOTE_MISMATCH",
+          );
+          assert.equal(
+            (await call("crm_customer", { entityId: created.a })).entity
+              .version,
+            1,
+          );
+          const renamed = await call("crm_entity_rename", args);
+          assert.equal(renamed.entity.id, created.a);
+          assert.equal(renamed.entity.version, 2);
+          assert.deepEqual(renamed.entity.aliases, ["合成名称甲", "明确别名"]);
+          assert.equal((await call("crm_entity_rename", args)).duplicate, true);
+          await assert.rejects(
+            call("crm_entity_rename", { ...args, name: "不同参数" }),
+            (e) => e.code === "IDEMPOTENCY_MISMATCH",
+          );
+          await assert.rejects(
+            call("crm_entity_rename", {
+              ...args,
+              idempotencyKey: "stale-name",
+            }),
+            (e) => e.code === "STALE_VERSION",
+          );
+          const second = await call("crm_entity_rename", {
+            ...args,
+            entityId: created.b,
+            aliases: [],
+            idempotencyKey: "rename-second",
+          });
+          assert.deepEqual(second.sameNameEntityIds, [created.a]);
+          assert.equal(second.merged, false);
+          assert.equal(
+            (await call("crm_entities", { query: "合成全称有限公司" })).total,
+            2,
+          );
+          assert.ok(
+            (await call("crm_entities", { query: "合成名称甲" })).items.some(
+              (e) => e.id === created.a,
+            ),
+          );
+          const races = await Promise.allSettled([
+            call("crm_entity_rename", {
+              ...args,
+              expectedVersion: 2,
+              idempotencyKey: "rename-race-a",
+            }),
+            call("crm_entity_rename", {
+              ...args,
+              expectedVersion: 2,
+              name: "合成终版有限公司",
+              idempotencyKey: "rename-race-b",
+            }),
+          ]);
+          assert.equal(races.filter((r) => r.status === "fulfilled").length, 1);
+          assert.equal(
+            races.find((r) => r.status === "rejected").reason.code,
+            "STALE_VERSION",
+          );
+          const restored = await call("crm_entity_rename", {
+            ...args,
+            expectedVersion: 3,
+            name: "合成名称甲",
+            aliases: [],
+            reason: "恢复旧显示名，保留改名历史",
+            idempotencyKey: "rename-restore",
+          });
+          assert.equal(restored.entity.id, created.a);
+          assert.equal(restored.entity.name, "合成名称甲");
+          assert.ok(restored.entity.aliases.includes("合成全称有限公司"));
+          const after = await domain.exportData();
+          for (const table of [
+            "facts",
+            "fact_versions",
+            "tasks",
+            "task_versions",
+            "relations",
+            "materials",
+          ])
+            assert.deepEqual(after.tables[table], before.tables[table], table);
+          const events = after.tables.audit.filter(
+            (e) => e.action === "entity_rename" && e.object_id === created.a,
+          );
+          assert.equal(events.length, 3);
+          assert.ok(
+            events.some(
+              (e) =>
+                e.detail.before.name === "合成名称甲" &&
+                e.detail.after.name === "合成全称有限公司",
+            ),
+          );
+          assert.ok(
+            events.every(
+              (e) =>
+                e.detail.after.id === created.a && e.detail.evidenceIds.length,
+            ),
+          );
+        },
+      );
+      await t.test(
         "关闭重开保留所有记录、稳定ID和原件；导出包括历史/审计",
         async () => {
           const before = (

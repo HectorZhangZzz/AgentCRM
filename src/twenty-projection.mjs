@@ -1,4 +1,5 @@
 import pg from "pg";
+import { isDeepStrictEqual } from "node:util";
 import { validateLocalUrl } from "./config.mjs";
 
 // Twenty is a rebuildable CRM view. Evidence, six-state tasks and audit live in
@@ -113,8 +114,10 @@ export function createProjection(config, domain) {
           if (current && mapping) {
             const drift = Object.keys(mapping.last_payload).some(
               (key) =>
-                JSON.stringify(current[key] ?? null) !==
-                JSON.stringify(mapping.last_payload[key] ?? null),
+                !isDeepStrictEqual(
+                  current[key] ?? null,
+                  mapping.last_payload[key] ?? null,
+                ),
             );
             if (drift)
               throw new Error(
@@ -130,9 +133,7 @@ export function createProjection(config, domain) {
             );
             if (created["create" + capital].id !== entity.id)
               throw new Error("Twenty 未保留指定稳定 ID");
-          } else if (
-            JSON.stringify(payload) !== JSON.stringify(mapping.last_payload)
-          ) {
+          } else if (!isDeepStrictEqual(payload, mapping.last_payload)) {
             await gql(
               `mutation($id:UUID!,$data:${capital}UpdateInput!){update${capital}(id:$id,data:$data){id}}`,
               { id: entity.id, data: payload },

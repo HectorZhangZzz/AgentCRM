@@ -15,6 +15,8 @@ const names = [
   `crm_domain_test_${tag}`,
   `crm_http_test_${tag}`,
   `crm_large_test_${tag}`,
+  `crm_product_test_${tag}`,
+  `crm_product_restore_test_${tag}`,
 ];
 try {
   for (const name of names) await pool.query(`CREATE DATABASE "${name}"`);
@@ -28,9 +30,18 @@ try {
     port: 4390,
     dataDir: path.join(directory, "http-data"),
     databaseUrl: urls[1],
-    ownerToken: randomBytes(32).toString("hex"),
-    writerToken: randomBytes(32).toString("hex"),
-    readerToken: randomBytes(32).toString("hex"),
+    productLibraryEnabled: true,
+    productUiEnabled: true,
+    // Optional reuse keeps this acceptance run from creating new credentials.
+    // These private fixtures only bind the isolated HTTP test ports.
+    ...Object.fromEntries(
+      ["owner", "writer", "reader"].map((role) => [
+        role + "Token",
+        process.env.CRM_TEST_REUSE_AUTH === "1"
+          ? config[role + "Token"]
+          : randomBytes(32).toString("hex"),
+      ]),
+    ),
   };
   const filename = path.join(directory, "http-config.json");
   await writeFile(filename, JSON.stringify(httpConfig), { mode: 0o600 });
@@ -54,12 +65,18 @@ try {
       "test/http-mcp.test.mjs",
       "test/large-file.test.mjs",
       "test/connections.test.mjs",
+      "test/projection.test.mjs",
+      "test/products.test.mjs",
+      "test/product-workflow.test.mjs",
     ],
     {
       cwd: projectRoot,
       env: {
         ...process.env,
         CRM_TEST_DATABASE_URL: urls[0],
+        CRM_PRODUCT_TEST_DATABASE_URL: urls[3],
+        CRM_PRODUCT_RESTORE_DATABASE_URL: urls[4],
+        CRM_PRODUCT_TEST_DATA_DIR: path.join(directory, "product-data"),
         CRM_TEST_DATA_DIR: path.join(directory, "domain-data"),
         CRM_TEST_KEEP_DATA: "1",
         CRM_HTTP_TEST_CONFIG: filename,
@@ -80,7 +97,7 @@ try {
   const code = await new Promise((resolve) => child.on("close", resolve));
   const retain = code !== 0 || process.env.CRM_TEST_KEEP_DATA === "1";
   if (!retain) {
-    // Only remove the three random database names this invocation created.
+    // Only remove the five random database names this invocation created.
     for (const name of names)
       await pool.query(`DROP DATABASE "${name}" WITH (FORCE)`);
     await rm(directory, { recursive: true, force: true });

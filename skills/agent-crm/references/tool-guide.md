@@ -50,3 +50,19 @@
 `crm_reassign({materialId,fromEntityId,toEntityId,reason,expectedVersion?,idempotencyKey})` 只允许 owner。它安全移动由该材料独立支持的事实/任务，保留稳定 ID。项目关联、多源证据、已有同键事实或关系可能成为 pending；pending 非空时保留原关联，不能说纠错已全部完成。
 
 权限拒绝时不要提升自身角色。`STALE_VERSION` 先重新查询；`IDEMPOTENCY_MISMATCH` 表示相同键的参数变了，先确认原请求，不盲目重试；工具错误或提交失败不能视为已保存。
+
+## 用户确认后的显示名纠正
+
+`crm_entity_rename({entityId,expectedVersion,name,aliases?,reason,evidence:[...],idempotencyKey})` 为 owner 专用。先保存用户确认材料并读取实体版本，再调用。旧名和既有别名保留；返回前后快照、证据 ID 和同名实体 ID。同名记录继续独立，不物理合并。回读新全称、旧名检索和审计；恢复旧名仍使用当前版本和此工具，不直接 SQL 改名或重建客户。用户确认分类仍为 user_provided，不能冒充网络独立验证。
+
+## 可选产品链路
+
+以实际发现的 Schema 为准；启用后仍按 ingest → 查重 → propose → commit → reader 回读。三种实体类型 product / product_model / product_version；层级关系 product_has_model / model_has_version；客户或项目通过 uses_product 指向其中一个稳定 ID，关联不等于成交或适配确认。
+
+产品断言操作示例（占位 ID 须替换为真实已保存证据，不可直接向正式库写示例）：
+
+```json
+{"op":"set_product_assertion","entityId":"<版本ID>","key":"video-request-project-A","kind":"requirement","status":"requested","statement":"客户要求的性能，尚未测试","contextEntityId":"<项目ID>","conditions":null,"evidence":[{"materialId":"<材料ID>","quote":"<原文子串>","locator":{"kind":"text"}}]}
+```
+
+assessment 状态只用 unknown/pending；capability 只用 supported/unsupported 且 reviewed:true，须有复核文字证据及实际适用条件，不能把 requirement 直接当已支持。crm_product 返回当前对象的独立三类断言、历史、证据和关联身份；要求/能力不得跨版本继承。新旧值冲突、expectedVersion、幂等规则与通用事实相同；通用 reassign 对产品断言只留待人工审查，不自动搬移。

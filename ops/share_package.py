@@ -54,13 +54,13 @@ SHARE_README = """# Agent CRM — 源码分享包
 
 这是供朋友安装和 Agent 接管的源码包，不是个人资料迁移备份。
 
-- 包含项目代码、Skill、文档、合成示例/测试和 Twenty 上游源码及其许可文件。
+- 包含项目代码、Skill、完整业务要求、文档、合成示例/测试和依赖准备说明。
 - 不包含客户数据库、原始附件、真实聊天、访问令牌、账号密码、已有备份、运行时二进制或安装依赖。
-- 安装前先读 README.md、docs/INSTALL.md 和 docs/HANDOFF.md；按目标系统准备 Node.js、Python、PostgreSQL、Redis，再安装锁定依赖并构建所需组件。
+- 安装前先读 docs/REQUIREMENTS.md、docs/CAPABILITIES.md、docs/INSTALL.md 和 docs/HANDOFF.md；按目标系统准备 Node.js、Python、PostgreSQL、Redis，再按固定来源取得 Twenty 并构建。
 - 首次安装应建立全新数据库和凭据。不要把别人的 .local/、私有备份或客户端令牌放进本包。
 - Docker、Windows 和各宿主的可用程度以随包文档的实测记录为准；此源码包不证明这些环境已经验收，也不保证解压后直接运行。
 - 需要迁移自己的历史数据时，另行使用完整私有备份恢复流程；只用本包无法恢复客户资料。
-- vendor/twenty/LICENSE 及各依赖/目录的许可继续适用；本包没有重新授予第三方代码许可。
+- 本包不重分发 vendor/twenty；上游含不同许可的组件，接收者按 docs/THIRD_PARTY.md 独立取得并遵守其条款。本包没有重新授予第三方代码许可。
 
 share-manifest.json 记录相对路径、字节数和 SHA256；ZIP 同目录的 .sha256 文件用于核验整个 ZIP。
 本工具按源码允许目录及文件排除规则打包，并拒绝已识别的私钥/令牌模式；它不能识别任意写进源码、文档或示例里的个人资料。分享前仍应审阅自己修改的源码和文档。
@@ -118,11 +118,9 @@ def _source_files(root):
     for child in sorted(root.iterdir(), key=lambda p: p.name):
         if _root_file_allowed(child.name) or child.name in ROOT_DIRS:
             visit(child)
-    upstream = root / "vendor" / "twenty"
-    if upstream.exists() or upstream.is_symlink():
-        if (root / "vendor").is_symlink():
-            raise RuntimeError("源码目录存在符号链接，分享已停止：vendor")
-        visit(upstream)
+    # Third-party sources can contain separately licensed commercial modules.
+    # Recipients acquire the pinned upstream themselves; never redistribute the
+    # existing machine's vendor tree or follow links into it.
     return sorted(found, key=lambda p: p.as_posix())
 
 

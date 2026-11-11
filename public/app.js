@@ -70,6 +70,7 @@ const actionLabels = {
   task_create: "建立待办",
   task_update: "更新待办",
   entity_create: "建立档案",
+  entity_rename: "更正名称并保留旧名",
   relation_create: "建立关联",
   material_reassign: "纠正归属",
   reassign_object: "纠正记录归属",

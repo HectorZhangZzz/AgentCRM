@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>产品资料库 · Agent CRM</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/products.css" />
+    <script type="module" src="/products.js"></script>
+  </head>
+  <body>
+    <div class="product-shell">
+      <aside>
+        <a class="brand" href="/"
+          ><span class="brand-mark">A</span
+          ><span>资料工作台<small>Agent CRM</small></span></a
+        >
+        <div class="workspace-label">产品资料 · 来源与适用边界</div>
+        <nav>
+          <a class="nav-link" href="/">客户与项目</a
+          ><a class="nav-link active" href="/products#/products">产品资料库</a>
+        </nav>
+        <div class="aside-bottom">
+          <span class="status-dot"></span>同一领域资料库
+          <p id="product-identity"></p>
+        </div>
+      </aside>
+      <main>
+        <header>
+          <div>
+            <div class="eyebrow">产品、型号、版本，各有依据</div>
+            <h1>产品资料库</h1>
+          </div>
+          <button id="new-product" hidden>＋ 新建产品</button>
+        </header>
+        <div id="preview-banner" class="scope-warning" hidden>
+          隔离预览 · 仅合成测试资料，与正式客户库分开。
+        </div>
+        <div id="product-notice" class="notice hidden" role="status"></div>
+        <div id="draft-banner" hidden class="draft-banner">
+          <span>保留了一份未提交草稿，仅在此标签页内保存。</span
+          ><button id="resume-draft" class="secondary">继续草稿</button
+          ><button id="discard-draft" class="text-button">丢弃草稿</button>
+        </div>
+        <div id="product-content" aria-live="polite">
+          <p class="muted">正在核对会话与功能状态…</p>
+        </div>
+      </main>
+    </div>
+    <dialog id="product-dialog" aria-labelledby="form-title">
+      <div id="product-form-content"></div>
+      <div class="actions">
+        <button id="cancel-draft" class="secondary" type="button">
+          取消并保留草稿
+        </button>
+      </div>
+    </dialog>
+    <dialog id="source-dialog" aria-labelledby="source-title">
+      <div id="source-content"></div>
+      <button id="source-close" class="secondary">关闭依据</button>
+    </dialog>
+  </body>
+</html>

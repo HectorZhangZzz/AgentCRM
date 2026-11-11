@@ -11,7 +11,10 @@ export class DomainError extends Error {
     this.details = details;
   }
 }
-export async function openDatabase(databaseUrl) {
+export async function openDatabase(
+  databaseUrl,
+  { productLibraryEnabled = false } = {},
+) {
   const pool = new Pool({ connectionString: databaseUrl, max: 6 });
   const client = await pool.connect();
   try {
@@ -22,9 +25,12 @@ export async function openDatabase(databaseUrl) {
       "CREATE TABLE IF NOT EXISTS portable_crm.migrations (version text PRIMARY KEY,checksum text NOT NULL,applied_at timestamptz NOT NULL DEFAULT now())",
     );
     const dir = fileURLToPath(new URL("../migrations/", import.meta.url));
-    const names = (await readdir(dir))
-      .filter((n) => /^\d+_.*\.sql$/.test(n))
-      .sort();
+    const baseNames = (await readdir(dir)).filter((n) =>
+      /^\d+_.*\.sql$/.test(n),
+    );
+    // Optional migrations are part of the checksum catalog but never auto-enabled.
+    const optionalName = "002_product_entities.sql";
+    const names = [...baseNames, optionalName].sort();
     const existing = (
       await client.query(
         "SELECT * FROM portable_crm.migrations ORDER BY version",
@@ -39,7 +45,11 @@ export async function openDatabase(databaseUrl) {
           { version: row.version },
         );
     for (const name of names) {
-      const sql = await readFile(`${dir}/${name}`, "utf8");
+      const optional = name === optionalName;
+      const sql = await readFile(
+        `${dir}/${optional ? "optional/" : ""}${name}`,
+        "utf8",
+      );
       const checksum = createHash("sha256").update(sql).digest("hex");
       const old = existing.find((r) => r.version === name);
       if (old && old.checksum !== checksum)
@@ -49,7 +59,7 @@ export async function openDatabase(databaseUrl) {
           409,
           { version: name },
         );
-      if (!old) {
+      if (!old && (!optional || productLibraryEnabled)) {
         await client.query(sql);
         await client.query(
           "INSERT INTO portable_crm.migrations(version,checksum) VALUES($1,$2)",

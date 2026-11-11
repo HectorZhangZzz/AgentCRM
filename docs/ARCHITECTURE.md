@@ -29,7 +29,7 @@ agent-crm/
 ├── ops/                     启停、常驻、构建、备份、恢复、导出
 ├── examples/                小型合成材料及隔离演练说明
 ├── test/                    自动化与小型验证结果
-├── vendor/twenty/           净化的原项目源码、构建和运行依赖
+├── vendor/twenty/           接收者独立准备的上游依赖，不随源码包分发
 ├── runtime/                 本机PG/Redis二进制、库与许可证
 ├── node_modules/            根依赖，可按锁文件重建
 ├── .local/                  私有配置、数据库、原件、日志与服务登记
@@ -68,3 +68,23 @@ HTTP 仅回环；reader查询，writer普通录入，owner确认冲突和纠错�
 ## 多宿主、Windows与分享
 
 WorkBuddy/DOTS/Codex优先接管与配置片段见 [HOSTS.md](HOSTS.md)；Windows/WSL2和Docker的限制、设计及验收步骤见 [WINDOWS_DOCKER.md](WINDOWS_DOCKER.md)。给朋友程序使用不含资料的 `./ops/crm share`，具体见 [SHARING.md](SHARING.md)，不要把个人数据导出当分享包。
+
+名称维护通过 owner 专用领域工具追加审计并保留旧名为别名，不改变实体 ID 或业务归属；无需新增迁移。投影以 JSON 深值比较区分真实外部修改与 GraphQL/JSONB 对象键序差异；真实名称或关联变化仍暂停覆盖。
+
+## 产品身份与受控迁移
+
+`src/products.mjs` 只实现产品身份、关系和断言的纯校验，提交仍由 `src/domain.mjs` 的事务、证据与版本机制执行。没有新建产品事实表或重复原件库，也没有模型服务。产品能力不跨型号/版本继承；客户要求、待验证判断与复核能力分层查询。
+
+`migrations/optional/002_product_entities.sql` 仅扩展实体类型约束；001 不改。`src/db.mjs` 对可选迁移同样检查版本/checksum，但默认不执行，只有显式 productLibraryEnabled:true 才执行。已有可选迁移即使关闭功能仍检查 checksum，不删数据或撤销迁移。监督器可能从工作区重新启动，因此通用默认关闭；实际启用须按目标实例的授权与备份恢复门槛进行。详见[产品资料库](PRODUCT_LIBRARY.md)。
+
+## 产品 UI 的独立入口
+
+public/products.html、products.js、products.css 提供中文交互；product-workflow.mjs 实现可测试的提交编排和前置校验，服务仍为唯一业务约束。workspace.js 仅是新进程选择的旧工作台导航包装，不改旧页面字节。产品 UI 和产品领域分别默认关闭，前者不启动迁移；实际状态由目标实例显式配置决定。
+
+ops/product-preview.mjs 只管理登记且身份匹配的本机合成预览；不同端口使用独立短期会话 Cookie，不共享正式 Cookie。真实Chrome/CDP验收和轻量工作流测试分开，截图来自实际页面；测试和预览不使用正式客户作为输入。
+
+## 需求与分享边界
+
+[业务要求](REQUIREMENTS.md)是独立于原会话的行为基线，[能力清单](CAPABILITIES.md)区分实现与计划。联系人初步核查和主动调研尚无队列、研究表或执行器，不能由Skill文字替代持久任务。未来沿用现有领域服务和同一数据库，按[研究方案](SEEKINGPERSON_INTEGRATION.md)增量实施。
+
+源码包不包含任何现有业务资料或私有部署记录，也不重分发上游Twenty。依赖取得与条款见[第三方说明](THIRD_PARTY.md)，分享包和完整资料备份分别见[SHARING](SHARING.md)、[MIGRATION](MIGRATION.md)。

@@ -16,7 +16,7 @@ class ShareBoundaries(unittest.TestCase):
     def fixture(self, root):
         (root / "package.json").write_text('{"name":"agent-crm","version":"0.1.2"}\n')
         for rel in (
-            "README.md", "src/server.mjs", "ops/crm", "docs/HANDOFF.md",
+            "README.md", "public/products.html", "public/products.js", "public/product-workflow.mjs", "ops/product-preview.mjs", "src/server.mjs", "src/products.mjs", "migrations/optional/002_product_entities.sql", "ops/crm", "docs/HANDOFF.md",
             "skills/agent-crm/SKILL.md", "examples/synthetic.txt", "test/example.test.mjs",
             "integrations/mcp.json", "deploy/docker/README.md", "vendor/twenty/LICENSE",
             "vendor/twenty/yarn.lock", "vendor/twenty/packages/twenty-server/src/main.ts",
@@ -56,11 +56,13 @@ class ShareBoundaries(unittest.TestCase):
             with zipfile.ZipFile(out) as archive:
                 names = set(archive.namelist())
                 self.assertTrue(set(planted).isdisjoint(names))
-                self.assertIn("vendor/twenty/LICENSE", names)
+                self.assertFalse(any(name.startswith("vendor/") for name in names))
                 self.assertIn("integrations/mcp.json", names)
-                self.assertIn("vendor/twenty/packages/twenty-server/src/cache/service.ts", names)
-                self.assertIn("vendor/twenty/packages/twenty-sdk/src/build/helper.ts", names)
-                self.assertIn("vendor/twenty/packages/twenty-client-sdk/src/metadata/generated/runtime/index.ts", names)
+                self.assertIn("src/products.mjs", names)
+                self.assertIn("public/products.html", names)
+                self.assertIn("public/product-workflow.mjs", names)
+                self.assertIn("ops/product-preview.mjs", names)
+                self.assertIn("migrations/optional/002_product_entities.sql", names)
                 manifest = json.loads(archive.read(MANIFEST_NAME))
                 self.assertEqual(manifest["format"], FORMAT)
                 self.assertFalse(manifest["businessDataIncluded"])
@@ -161,7 +163,7 @@ class ShareBoundaries(unittest.TestCase):
             with zipfile.ZipFile(out) as archive:
                 names = set(archive.namelist())
                 self.assertTrue(set(private).isdisjoint(names))
-                self.assertIn(allowed.relative_to(root).as_posix(), names)
+                self.assertNotIn(allowed.relative_to(root).as_posix(), names)
 
 
 if __name__ == "__main__":

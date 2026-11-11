@@ -3,9 +3,9 @@
   "project": "Agent CRM",
   "sourceOnly": true,
   "businessDataIncluded": false,
-  "sourceCommit": "05d8613aba695aafc797ab2acd0a97febfcdebb9",
-  "version": "0.1.2",
-  "sourceManifestSha256": "76f2d9e431c77a7b53a41ff9f9c1b7d38133ce3bac17e4e14b0a4963500255df",
+  "sourceCommit": "7e7766beb4d0eaf4103ce252524d270187bdb67a",
+  "version": "0.1.4",
+  "sourceManifestSha256": "8d38619070830277dd043f82af49af89b82d6b148b460099d0ee1e68ee5bb5c6",
   "history": "Independent source-only history; original repository history is excluded.",
   "restore": "This repository cannot restore customer databases, attachments or credentials."
 }

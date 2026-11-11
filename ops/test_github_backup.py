@@ -64,7 +64,7 @@ class SourceBackupTests(unittest.TestCase):
         self.assertNotEqual(result["head"], original_head)
         self.assertNotIn("Historical upstream", self.git(snapshot, "log", "--all", "--oneline"))
         names = set(self.git(snapshot, "ls-files").splitlines())
-        self.assertIn("vendor/twenty/LICENSE", names)
+        self.assertFalse(any(name.startswith("vendor/") for name in names))
         self.assertIn(backup.INFO, names)
         self.assertNotIn("legacy-debug.txt", names)
         self.assertFalse(any(name.startswith((".local/", "test/results/", ".env")) for name in names))

@@ -1,6 +1,6 @@
 {
   "name": "agent-crm",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "engines": {
@@ -10,7 +10,8 @@
     "start": "node src/server.mjs",
     "mcp": "node src/mcp.mjs",
     "test": "node test/run.mjs",
-    "crm": "node src/cli.mjs"
+    "crm": "node src/cli.mjs",
+    "test:ui": "node test/product-ui.browser.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/client": "2.4.0",

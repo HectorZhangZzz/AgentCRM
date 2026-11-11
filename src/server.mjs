@@ -9,11 +9,22 @@ import { createProjection } from "./twenty-projection.mjs";
 import { MAX_MATERIAL_BYTES, MAX_JSON_BYTES } from "./material-storage.mjs";
 
 const config = loadConfig();
+if (
+  config.productUiEnabled !== undefined &&
+  typeof config.productUiEnabled !== "boolean"
+)
+  throw new Error("productUiEnabled须为显式布尔值");
+const productUiEnabled = config.productUiEnabled === true;
+// Preview cookies must not overwrite another port's formal or preview session.
+const sessionCookieName =
+  config.previewOnly === true
+    ? `crm_preview_${Number(config.port)}`
+    : "crm_session";
 const domain = await createDomain(config);
 const projection = createProjection(config, domain);
 const sessions = new Map();
 const loginLinks = new Map();
-const ownerOnly = new Set(["crm_reassign"]);
+const ownerOnly = new Set(["crm_reassign", "crm_entity_rename"]);
 const equal = (a, b) =>
   typeof a === "string" &&
   typeof b === "string" &&
@@ -32,9 +43,9 @@ function identity(req) {
     const role = roleFor(bearer);
     return role ? { role, actor: `local-${role}` } : null;
   }
-  const sessionId = /(?:^|;\s*)crm_session=([a-zA-Z0-9_-]+)/.exec(
-    req.headers.cookie || "",
-  )?.[1];
+  const sessionId = new RegExp(
+    `(?:^|;\\s*)${sessionCookieName}=([a-zA-Z0-9_-]+)`,
+  ).exec(req.headers.cookie || "")?.[1];
   const session = sessions.get(sessionId);
   if (session && session.expires > Date.now())
     return { role: session.role, actor: `console-${session.role}` };
@@ -82,7 +93,7 @@ function setSession(res, role) {
   sessions.set(session, { role, expires: Date.now() + 12 * 3600000 });
   res.setHeader(
     "Set-Cookie",
-    `crm_session=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`,
+    `${sessionCookieName}=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`,
   );
 }
 function requireIdentity(req) {
@@ -136,7 +147,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "DELETE" && url.pathname === "/api/session") {
       res.setHeader(
         "Set-Cookie",
-        "crm_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+        `${sessionCookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`,
       );
       return json(res, { ok: true });
     }
@@ -172,6 +183,7 @@ const server = http.createServer(async (req, res) => {
         return json(res, {
           ...(await domain.health()),
           projection: projection.status(),
+          previewOnly: config.previewOnly === true,
         });
       if (req.method === "POST" && url.pathname === "/api/v1/export") {
         if (ctx.role !== "owner")
@@ -253,19 +265,38 @@ const server = http.createServer(async (req, res) => {
       "/": "index.html",
       "/app.js": "app.js",
       "/style.css": "style.css",
+      ...(productUiEnabled
+        ? {
+            "/workspace.js": "workspace.js",
+            "/products": "products.html",
+            "/products.js": "products.js",
+            "/products.css": "products.css",
+            "/product-workflow.mjs": "product-workflow.mjs",
+          }
+        : {}),
     };
     if (req.method === "GET" && Object.hasOwn(staticFiles, url.pathname)) {
       const file = staticFiles[url.pathname],
-        type = file.endsWith(".js")
-          ? "text/javascript"
-          : file.endsWith(".css")
-            ? "text/css"
-            : "text/html";
+        type =
+          file.endsWith(".js") || file.endsWith(".mjs")
+            ? "text/javascript"
+            : file.endsWith(".css")
+              ? "text/css"
+              : "text/html";
       res.writeHead(200, {
         "Content-Type": type + "; charset=utf-8",
         "Cache-Control": "no-cache",
       });
-      return res.end(await readFile(path.join(projectRoot, "public", file)));
+      const bytes = await readFile(path.join(projectRoot, "public", file));
+      // Keep legacy files unchanged: running old instances still read them.
+      // Only a newly started server selects the navigation wrapper.
+      return res.end(
+        file === "index.html" && productUiEnabled
+          ? bytes
+              .toString("utf8")
+              .replace('src="/app.js"', 'src="/workspace.js"')
+          : bytes,
+      );
     }
     failure("NOT_FOUND", "页面不存在", 404);
   } catch (error) {

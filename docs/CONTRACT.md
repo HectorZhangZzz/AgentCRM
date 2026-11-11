@@ -65,3 +65,37 @@ Agent CRM 保留已审查的 Twenty 兼容投影，不改原生产库。领域�
 `./ops/crm connection [--reader] [--host generic|workbuddy|codex|dots|hermes|openclaw] [--wsl DISTRO] [--project-root ABSOLUTE] [--node EXECUTABLE]`只输出配置片段，不读令牌、不写宿主设置。默认generic JSON/writer保留既有行为；Codex为TOML，Hermes为YAML，其余JSON。WSL模式使用wsl.exe argv桥接，项目路径必须是Linux绝对路径。
 
 `./ops/crm share [--out NEW.zip]`按源码允许清单生成无业务资料ZIP与SHA256；不读本机配置，拒绝覆盖已有输出。`share`与包含原件的`export`、完整私有`backup`语义不同。新增integrations/deploy目录进入源码分享与迁移导出；share输出目录不参与restore的代码复制。
+
+## 用户确认后的名称维护
+
+`crm_entity_rename({entityId,expectedVersion,name,aliases?,reason,evidence:[...],idempotencyKey})` 仅 owner 可调用，writer/reader 不发现此工具且直接调用被拒。JSON Schema 由领域工具统一提供，HTTP/MCP/CLI 共用。原显示名自动进入别名，已有别名保留；稳定 ID 不变，版本增加，更名前后快照、原因和证据追加至审计。重试复用原请求及幂等键，版本过期拒绝。
+
+返回 `entity`、`before`、`evidenceIds`、`sameNameEntityIds`、`merged:false`。同名允许保留不同 ID，不建立合并关系、不移动联系人/项目/任务或改动合同主体。恢复旧显示名时重新读取版本，依据原审计和证据调用同一工具；旧全称仍保留为别名及历史。没有独立验证的用户确认不得冒充网络或工商核验。此扩展不新增或修改数据库迁移。
+
+## 0.1.4 可选产品资料库扩展（契约仍为 1）
+
+`createDomain({databaseUrl,dataDir,productLibraryEnabled=false})` 增加显式布尔选项；字符串等类型拒绝。关闭时不注册 `crm_product`、不在 `crm_entities.type` Schema 枚举中提供产品类型，产品创建、产品关系和产品断言写入拒绝。`crm_health.features.productLibrary` 反映实际领域实例设置。
+
+启用时新增 `product`、`product_model`、`product_version`，仍使用 entities、facts/fact_versions、relations、materials、evidence；导出表结构不变。`product_has_model` 只允许产品→型号，`model_has_version` 只允许型号→版本，子对象各只有一个同类父关系；同名同原始证据的型号/版本判重同时核对父对象，计入本批尚未执行的关系及待创建父引用，仅明确属于不同父对象时允许独立创建；同父或任一父归属缺失仍返回 ENTITY_CANDIDATE，父冲突/类型错误拒绝，全部保持事务原子性；`uses_product` 只允许客户/项目→产品、型号或版本，表达有证据的关联，不证明采购或技术适配。涉及产品的其他关系类型拒绝。名称相同不自动合并；父关系与并发提交受同一事务锁保护。
+
+`crm_propose.operations` 新增 `{op:"set_product_assertion",entityId,key,kind,status,statement,conditions?,contextEntityId?,reviewed?,evidence,expectedVersion?}`，同批次 ID 支持 `$ref`。key 为 1–120 个不含空白/冒号的字符；未知字段拒绝。
+
+| kind | status | 约束及存储分类 |
+|---|---|---|
+| requirement | requested | 必须有客户/项目 contextEntityId；customer_claim |
+| assessment | unknown / pending | 可选客户/项目上下文；inference |
+| capability | supported / unsupported | reviewed 必须为 true，需可匹配文字证据；verified |
+
+能力的 verified 仅表示提交者明确复核、提供了文字依据，服务不验证物理性能或证书真实性。二进制定位不能替代文字证据。statement、conditions 和 contextEntityId 必须表达实际测试/适用边界；未知条件留空而不补造。三类断言使用 `product_assertion:<kind>:<key>` 独立命名空间，不允许通用 set_fact 伪造；复用证据、版本、冲突、幂等及 owner 冲突确认机制。不同上下文的同 key 不会自动聚合，需使用可区分 key 并保留上下文，冲突按既有规则处理。
+
+`crm_product:{entityId,includeCompleted?}` 是只读工具。返回当前对象的通用 facts，以及分开的 requirements、assessments、capabilities、身份 parents/children、直接关联客户/项目、材料和证据。它不把相关项目事实混入产品能力，不跨产品/型号/版本继承结论；应逐对象查询。`crm_customer` 同时列出直接关联 products。通用归属纠正遇产品断言保留 pending/product_assertion_requires_review，不自动迁移断言。
+
+可选 002 的发现、安全门槛、升级/恢复边界及调用示例见 [PRODUCT_LIBRARY](PRODUCT_LIBRARY.md)。HTTP/MCP/CLI 动态复用该 Schema 和工具，不另设业务真相。
+
+## 可选产品 UI 与预览隔离
+
+`productUiEnabled` 为服务层可选布尔配置，默认 false，非布尔值拒绝启动；不影响领域迁移开关。关闭时保留原首页字节和旧静态路由，不提供产品静态入口；显式开启后提供 `/products`、独立脚本/样式及首页导航包装。新UI仍只调用已注册领域工具，不扩权限、自动解决冲突或新增业务真相。
+
+认证模式、角色与登录链接权限未扩展。正式默认 Cookie 名仍 crm_session，预览配置 previewOnly:true 则按监听端口隔离为 crm_preview_<port>，读取、设置和退出一致；不同实例会话互不覆盖、他实例 Cookie 不被接受。`GET /api/v1/status` 增加非秘密布尔字段 previewOnly，供页面标明合成预览。通用默认关闭；实际启用状态由目标实例自己的配置决定。
+
+产品 UI 的客户端工作流固定已提交 payload、材料/建议ID与幂等键。网络/不完整响应将不确定状态持续保留；401或其他后续失败不能清除此状态。只有重试核对同一 proposal 收到明确 committed/conflict 结果后，才允许相应完成或冲突处理。客户端不是权限边界，后端证据与事务约束仍为准。

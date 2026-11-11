@@ -1,0 +1,30 @@
+{
+  "format": "agent-crm-upstream-source-v1",
+  "project": "Twenty",
+  "repository": "https://github.com/twentyhq/twenty",
+  "commit": "fb8b9cb86c72dd3b1f2da802fec18969fb817a60",
+  "archive": {
+    "url": "https://codeload.github.com/twentyhq/twenty/tar.gz/fb8b9cb86c72dd3b1f2da802fec18969fb817a60",
+    "sha256": "b892b408a07aab9307f6ef36d209919057c49f3b2064ca77bd0e2c38853011dc",
+    "bytes": 201048631,
+    "prefix": "twenty-fb8b9cb86c72dd3b1f2da802fec18969fb817a60"
+  },
+  "fingerprints": {
+    "LICENSE": "327d638e06df0bbf9491e0a3683d70c2ffdb6b5a0b7f1a79ac35bd73c89fbf8a",
+    "package.json": "47b3eaa25aaac0abeccbc0d0a741068077860456a89eb20ba246cd0cd79c6fc6",
+    "yarn.lock": "504a7e6cce570f9b0dc84d554a4c59f86335d17dbbb45d91e6692bfec46978da",
+    "packages/twenty-server/package.json": "78368d91d6cd914d283e65d628df5204fb2e2cf840b8ff6e6c72c1571fb3e6f8"
+  },
+  "license": {
+    "notice": "Obtain directly from the official upstream. Read LICENSE before use: AGPLv3 plus files marked @license Enterprise under separate commercial terms. This manifest does not grant or change those rights.",
+    "url": "https://github.com/twentyhq/twenty/blob/fb8b9cb86c72dd3b1f2da802fec18969fb817a60/LICENSE"
+  },
+  "verification": {
+    "date": "2026-11-11",
+    "scope": "Official complete Git tree and pinned archive checked against the local non-private source; package, lockfile and server package match exactly.",
+    "matchingSourceFiles": 21152,
+    "localDifferences": "10 modified files and 2 additional files concern old Twenty AI/provider or Docker changes; they are intentionally not distributed or reapplied. Upstream editor/MCP configuration and two unrelated website assets were absent locally.",
+    "cleanInstallAndBuildVerified": false,
+    "compatibility": "A reproducible upstream baseline, not a byte-for-byte replacement of the existing private installation. Test a fresh installation before production; never replace an existing vendor directory with this command."
+  }
+}
